@@ -2,6 +2,7 @@ package ma.fstt.gatewayservice.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
@@ -19,44 +20,66 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         http
-                // Désactiver CSRF pour les API REST
                 .csrf(csrf -> csrf.disable())
-
-                // ✅ Configuration CORS explicite
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                // Configuration des autorisations
                 .authorizeExchange(exchanges -> exchanges
-                        // ✅ IMPORTANT: Permettre toutes les requêtes OPTIONS (preflight)
-                        .pathMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        // ========================================
+                        //  OPTIONS : TOUJOURS PUBLIC (CORS preflight)
+                        // ========================================
+                        .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Routes publiques
-                        .pathMatchers(
-                                "/api/auth/**",
-                                "/oauth2/**",
-                                "/.well-known/**",
-                                "/actuator/health",
-                                "/actuator/info",
-                                "/actuator/env",
-                                "/api/users"
-                        ).permitAll()
+                        // ========================================
+                        //  ROUTES AUTH PUBLIQUES (sans token)
+                        // ========================================
+                        .pathMatchers(HttpMethod.GET, "/api/auth/metamask/nonce").permitAll()
+                        .pathMatchers(HttpMethod.POST, "/api/auth/metamask/login").permitAll()
+                        .pathMatchers(HttpMethod.POST, "/api/auth/metamask/refresh").permitAll()
 
-                        // Toutes les autres routes nécessitent une authentification JWT
+                        // OAuth2 endpoints publics
+                        .pathMatchers("/oauth2/**", "/.well-known/**").permitAll()
+
+                        // ========================================
+                        // ROUTES PROPERTY MICROSERVICE : GET PUBLIC
+                        // ========================================
+                        .pathMatchers(HttpMethod.GET, "/api/property-microservice/properties/**").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/api/property-microservice/rooms/**").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/api/property-microservice/properties/room-images/**").permitAll()
+
+                        //  Tous les autres  (POST, PUT, DELETE, PATCH) sur property-microservice nécessitent JWT
+                        .pathMatchers("/api/property-microservice/**").authenticated()
+
+                        // ========================================
+                        // ROUTES USER SERVICE
+                        // ========================================
+
+
+                        // GET /api/users/wallet/{wallet} : PUBLIC
+                        .pathMatchers(HttpMethod.GET, "/api/users/wallet/**").permitAll()
+
+                        // POST /api/users : PUBLIC (inscription)
+                        .pathMatchers(HttpMethod.POST, "/api/users").permitAll()
+
+                        //  Toutes les autres routes /api/users/** nécessitent JWT
+                        .pathMatchers("/api/users/**").authenticated()
+
+                        .pathMatchers(HttpMethod.GET, "/api/users").authenticated()
+
+                        //  ACTUATOR (monitoring)
+                        .pathMatchers("/actuator/health", "/actuator/info" , "/actuator/env").permitAll()
+
+                        //  RENTAL AGREEMENT : JWT OBLIGATOIRE
+                        .pathMatchers("/api/rentalAgreement-microservice/**").authenticated()
+
+                        // ========================================
+                        // 7️⃣ RÈGLE PAR DÉFAUT : JWT OBLIGATOIRE
+                        // ========================================
                         .anyExchange().authenticated()
                 )
-
-                // Configuration OAuth2 Resource Server (JWT)
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> {})
-                );
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}));
 
         return http.build();
     }
 
-    /**
-     * ✅ Configuration CORS explicite en Java
-     * Ceci garantit que CORS fonctionne même si application.yml échoue
-     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
