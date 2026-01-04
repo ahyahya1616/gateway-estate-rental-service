@@ -35,6 +35,9 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.POST, "/api/auth/metamask/login").permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/auth/metamask/refresh").permitAll()
 
+
+                        // Notification
+                        .pathMatchers("/ws-notifications/**").permitAll()
                         // OAuth2 endpoints publics
                         .pathMatchers("/oauth2/**", "/.well-known/**").permitAll()
 
@@ -63,7 +66,6 @@ public class SecurityConfig {
                         .pathMatchers("/api/users/**").authenticated()
 
                         .pathMatchers(HttpMethod.GET, "/api/users").authenticated()
-
                         //  ACTUATOR (monitoring)
                         .pathMatchers("/actuator/health", "/actuator/info" , "/actuator/env").permitAll()
 
@@ -71,7 +73,7 @@ public class SecurityConfig {
                         .pathMatchers("/api/rentalAgreement-microservice/**").authenticated()
 
                         // ========================================
-                        // 7️⃣ RÈGLE PAR DÉFAUT : JWT OBLIGATOIRE
+                        // RÈGLE PAR DÉFAUT : JWT OBLIGATOIRE
                         // ========================================
                         .anyExchange().authenticated()
                 )
