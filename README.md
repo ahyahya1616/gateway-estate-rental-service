@@ -30,9 +30,9 @@ flowchart LR
 	Gateway -->|on failure -> fallback| Fallback
 	Gateway -->|fetch config at startup| ConfigServer
 	ConfigServer -->|reads files| ConfigRepo
-	ConfigRepo -->|contains| application.yml
-	ConfigRepo -->|contains| gateway-service.yml
-	ConfigRepo -->|contains profile overrides| gateway-service-{profile}.yml
+	ConfigRepo -->|contains| AppYML["application.yml"]
+	ConfigRepo -->|contains| GatewayYML["gateway-service.yml"]
+	ConfigRepo -->|contains profile overrides| GatewayProfileYML["gateway-service-{profile}.yml"]
 
 	style Gateway fill:#f9f,stroke:#333,stroke-width:1px
 	style ConfigServer fill:#ff9,stroke:#333,stroke-width:1px
