@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-service
+  namespace: dev
+  labels:
+    app: gateway-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway-service
+  template:
+    metadata:
+      labels:
+        app: gateway-service
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: gateway-service
+          image: gateway-service:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8880
+
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "dev"
+
+            - name: CONFIG_SERVER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: gateway-config
+                  key: CONFIG_SERVER_URL
+
+            - name: FRONTEND_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: gateway-config
+                  key: FRONTEND_URL
+
+            - name: AUTH_SERVER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: gateway-config
+                  key: AUTH_SERVER_URL
+
+            - name: USER_MANAGEMENT_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: gateway-config
+                  key: USER_MANAGEMENT_SERVICE_URL
+
+            - name: RENTAL_AGREEMENT_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: gateway-config
+                  key: RENTAL_AGREEMENT_URL
+
+            - name: PROPERTY_MICROSERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: gateway-config
+                  key: PROPERTY_MICROSERVICE_URL
+
+            - name: NOTIFICATION_MICROSERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: gateway-config
+                  key: NOTIFICATION_MICROSERVICE_URL
+
+            - name: OAUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: gateway-secrets
+                  key: OAUTH_CLIENT_ID
+
+            - name: OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: gateway-secrets
+                  key: OAUTH_CLIENT_SECRET
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8880
+            initialDelaySeconds: 90
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 5
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8880
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 5

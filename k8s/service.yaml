@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-service
+  namespace: dev
+spec:
+  type: ClusterIP  # juste ClusterIP pour Ingress
+  ports:
+    - port: 8880      # le port que l’Ingress va utiliser pour router
+      targetPort: 8880
+      protocol: TCP
+      name: http
+  selector:
+    app: gateway-service
