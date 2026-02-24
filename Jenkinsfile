@@ -2,7 +2,5 @@
 
 springBootKindPipeline(
         serviceName: 'gateway-service',
-        imageName: 'gateway-service',
-        jarName: 'gateway-service.jar',
-        port: '8880'
+        imageName: 'gateway-service'
 )
